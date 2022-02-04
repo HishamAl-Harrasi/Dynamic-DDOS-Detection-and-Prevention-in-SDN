@@ -10,8 +10,12 @@ if __name__ == "__main__":
 
     while True:
         try:
+            fd = open("csv/normalTraffic.csv", "a")
             trafficFeatures = sniffMininet()
+            csvWriter = csv.writer(fd)
+            csvWriter.writerow(trafficFeatures)
         except KeyboardInterrupt:
+            fd.close()
             print("\n\nPacket sniff stopped...\n\n")
             break
 
