@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-import csv
 from scapy.all import *        
 from extractFeatures import *
+from collections import Counter
 
 class NetworkTraffic:
     def __init__(self, sniffTimeout = 5):
@@ -16,12 +16,11 @@ class NetworkTraffic:
 
         self.sniffNow = True
 
-        # sniff(filter="ip", prn=self.parsePacketInfo, timeout=sniffTimeout)                                  # For normal machine testing & usage
-        # sniff(filter="ip", iface=["s1-eth1"], prn=self.parsePacketInfo, timeout=sniffTimeout)                 # For mininet testing & usage
-        sniff(filter="ip", iface=["s1-eth1", "s1-eth2", "s1-eth3", "s1-eth4"], prn=self.parsePacketInfo, timeout=sniffTimeout)    # For mininet testing & usage
+        # sniff(filter="ip", iface=["s1-eth1", "s1-eth2", "s1-eth3", "s1-eth4"], prn=self.parsePacketInfo, timeout=sniffTimeout)    # For mininet testing & usage
+        sniff(filter="ip", prn=self.parsePacketInfo, timeout=sniffTimeout)    # For mininet testing & usage
 
 
-    def parsePacketInfo(self, packet, printPacket=True):
+    def parsePacketInfo(self, packet, printPacket=False):
         # This is the callback function for the scapy.sniff() function, which stores the required data features for later analysis
 
         # Since this program will be run on a switch, each packet is "sniffed" twice, because it goes in from one interface and leaves from another
@@ -62,6 +61,13 @@ class NetworkTraffic:
         
         return [srcIPEntropy, dstIPEntropy, packetCount, avgPacketSize]
 
+    
+    def getIPAddresses(self):
+        return [self.ipSrcAddresses, self.ipDstAddresses]
+
+
+
+
 
 def sniffMininet():
 
@@ -69,11 +75,23 @@ def sniffMininet():
 
     packetCapture = net.getCapturedData()
     
-    trafficFeatures = net.getDataFeatures(packetCapture, False)    
-
+    trafficFeatures = net.getDataFeatures(packetCapture, False)
+    
     return trafficFeatures
 
 
 
+if __name__ == "__main__":
+    net = NetworkTraffic()
+
+    srcIps = list(set(net.getIPAddresses()[0]))
+    dstIps = list(set(net.getIPAddresses()[1]))
+    
+    print(srcIps)
+    print("\n\n")
+    print(dstIps)
+
+
+    
 
 

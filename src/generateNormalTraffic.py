@@ -22,7 +22,7 @@ def generateNormalTraffic(targetIP):
 
 def loopGNT(hostObj, targetIP): # Loop through generateNormalTraffic function
     i = 0
-    while i < 100:
+    while i < 10000:
         cmd = generateNormalTraffic(targetIP)
         hostObj.cmd(cmd) # This does not wait for the command to complete
         time.sleep(4.5)
