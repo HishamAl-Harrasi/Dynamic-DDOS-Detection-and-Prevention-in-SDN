@@ -1,14 +1,13 @@
-#/usr/bin/python3
+# /usr/bin/python3
 
 import os
 import sys
 import time
 from threading import Thread
-import threading
 
 from mininet.net import Mininet
 from mininet.cli import CLI
-from mininet.node import OVSKernelSwitch
+from mininet.node import OVSSwitch, RemoteController
 
 from generateNormalTraffic import *
 from generateDDOSTraffic import *
@@ -36,12 +35,14 @@ h6 = network.addHost('h6')
 h7 = network.addHost('h7')
 h8 = network.addHost('h8')
 
-s1 = network.addSwitch('s1')
-s2 = network.addSwitch('s2')
-#s1 = network.addSwitch('s1', cls=OVSKernelSwitch, protocols='OpenFlow13')
-#s2 = network.addSwitch('s2', cls=OVSKernelSwitch, protocols='OpenFlow13')
+# s1 = network.addSwitch('s1')
+# s2 = network.addSwitch('s2')
+s1 = network.addSwitch('s1', cls=OVSSwitch, protocols='OpenFlow13')
+s2 = network.addSwitch('s2', cls=OVSSwitch, protocols='OpenFlow13')
 
-c1 = network.addController('c0')
+# c1 = network.addController('c0', ip='127.0.0.1', port=6653)
+c1 = network.addController(
+    'c0', controller=RemoteController, ip='127.0.0.1', port=6653)
 
 network.addLink(h1, s1)
 network.addLink(h2, s1)
@@ -74,7 +75,8 @@ for sw in network.switches:
 print("\nNetwork topology created successfully!\n")
 
 # Make each hosts shell accessible from within this python script
-h1, h2, h3, h4, h5, h6, h7, h8 = network.get("h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8")
+h1, h2, h3, h4, h5, h6, h7, h8 = network.get(
+    "h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8")
 s1, s2 = network.get("s1", "s2")
 c0 = network.get("c0")
 
@@ -111,7 +113,6 @@ if GENERATE_NORMAL_TRAFFIC:
     t3.daemon = True
     t4.daemon = True
 
-
     time.sleep(1)
     t1.start()
     time.sleep(1)
@@ -144,8 +145,9 @@ elif GENERATE_NORMAL_AND_DDOS_TRAFFIC:
     t2 = Thread(target=loopGNT, args=(h2, h6.IP()))   # Normal Traffic
     t3 = Thread(target=loopGNT, args=(h3, h7.IP()))   # Normal Traffic
     t4 = Thread(target=loopGNT, args=(h4, h8.IP()))   # Normal Traffic
-    
-    t5 = Thread(target=loopGDTSS, args=(h5, h2.IP()))   # DDOS Traffic - This could be loopGDT or loopGDTSS
+
+    # DDOS Traffic - This could be loopGDT or loopGDTSS
+    t5 = Thread(target=loopGDTSS, args=(h5, h2.IP()))
 
     t1.daemon = True
     t2.daemon = True
@@ -190,7 +192,3 @@ if PCAP_MODE:
     os.system(mergeCommandS2)
     os.system(cleanupCommandS1)
     os.system(cleanupCommandS2)
-
-
-
-        

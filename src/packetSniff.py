@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
-from scapy.all import *        
+from scapy.all import *
 from extractFeatures import *
-from collections import Counter
+
 
 class NetworkTraffic:
-    def __init__(self, sniffTimeout = 5):
+    def __init__(self, sniffTimeout=5):
         self.sniffTimeout = sniffTimeout
 
         self.ipSrcAddresses = []
@@ -13,12 +13,12 @@ class NetworkTraffic:
         self.packetCount = 0
         self.totalPacketSizes = 0
 
-
         self.sniffNow = True
 
-        # sniff(filter="ip", iface=["s1-eth1", "s1-eth2", "s1-eth3", "s1-eth4"], prn=self.parsePacketInfo, timeout=sniffTimeout)    # For mininet testing & usage
-        sniff(filter="ip", prn=self.parsePacketInfo, timeout=sniffTimeout)    # For mininet testing & usage
-
+        # Note: The interface names should be changed to match of the switch this code is being run on
+        sniff(filter="ip", iface=["s1-eth1", "s1-eth2", "s1-eth3", "s1-eth4"],
+              prn=self.parsePacketInfo, timeout=sniffTimeout)    # For mininet testing & usage
+        # sniff(filter="ip", prn=self.parsePacketInfo, timeout=sniffTimeout)    # For mininet testing & usage
 
     def parsePacketInfo(self, packet, printPacket=False):
         # This is the callback function for the scapy.sniff() function, which stores the required data features for later analysis
@@ -33,7 +33,7 @@ class NetworkTraffic:
                 self.ipDstAddresses.append(packet["IP"].dst)
                 self.totalPacketSizes += packet["IP"].len
                 self.packetCount += 1
-    
+
                 if printPacket:
                     print(packet["IP"].src)
                     print(packet["IP"].dst)
@@ -43,11 +43,10 @@ class NetworkTraffic:
         else:
             self.sniffNow = True
 
-
     def getCapturedData(self):
         return [self.ipSrcAddresses, self.ipDstAddresses, self.packetCount, self.totalPacketSizes]
 
-
+    # Extract the features needed for the SVM model
     def getDataFeatures(self, packetCapture, printStats=False):
         srcIPEntropy = calculateAverageEntropy(packetCapture[0], False)
         dstIPEntropy = calculateAverageEntropy(packetCapture[1], False)
@@ -55,18 +54,14 @@ class NetworkTraffic:
         totalPacketSizes = packetCapture[3]
 
         avgPacketSize = totalPacketSizes / packetCount
-        
+
         if printStats:
             print(f"Avg Source IP Entropy:      {srcIPEntropy}\nAvg Dest IP Entropy:        {dstIPEntropy}\nAvg Packet Size:            {avgPacketSize}\nTotal Packet Count:         {packetCount}\nPacket Arrival Rate:        {packetCount / self.sniffTimeout}\n\n")
-        
-        return [srcIPEntropy, dstIPEntropy, packetCount, avgPacketSize]
 
-    
+        return [srcIPEntropy, dstIPEntropy, packetCount]
+
     def getIPAddresses(self):
         return [self.ipSrcAddresses, self.ipDstAddresses]
-
-
-
 
 
 def sniffMininet():
@@ -74,11 +69,10 @@ def sniffMininet():
     net = NetworkTraffic()
 
     packetCapture = net.getCapturedData()
-    
-    trafficFeatures = net.getDataFeatures(packetCapture, False)
-    
-    return trafficFeatures
 
+    trafficFeatures = net.getDataFeatures(packetCapture, False)
+
+    return trafficFeatures
 
 
 if __name__ == "__main__":
@@ -86,12 +80,7 @@ if __name__ == "__main__":
 
     srcIps = list(set(net.getIPAddresses()[0]))
     dstIps = list(set(net.getIPAddresses()[1]))
-    
+
     print(srcIps)
     print("\n\n")
     print(dstIps)
-
-
-    
-
-
